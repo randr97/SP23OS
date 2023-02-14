@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include <oslab.h>
+#include "oslab.h"
 
 bool isNullPCB(struct PCB process) {
     if(
@@ -40,3 +40,8 @@ struct PCB handle_process_arrival_pp(struct PCB ready_queue[QUEUEMAX],
         return new_process;
     }
 };
+
+// int main(int argc, char *argv[]) {
+//     printf("Successfully compiled!");
+//     return 0;
+// }
