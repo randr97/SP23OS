@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdbool.h>
-#include "oslab.h"
+#include <oslab.h>
 
 bool isNullPCB(struct PCB process) {
     if(
