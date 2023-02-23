@@ -4,8 +4,7 @@
 
 #include "oslabs.h"
 
-struct PCB NULL_PCB;
-NULL_PCB = {0,0,0,0,0,0,0};
+struct PCB NULL_PCB = {0,0,0,0,0,0,0};
 
 bool isNullPCB(struct PCB* process) {
     if(
@@ -93,4 +92,8 @@ struct PCB handle_process_arrival_srtp(struct PCB ready_queue[QUEUEMAX],
         new_process.remaining_bursttime = new_process.total_bursttime;
         return new_process;
     }
+}
+
+int main() {
+    return -1;
 }
