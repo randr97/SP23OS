@@ -1,6 +1,6 @@
 #include <dirent.h> 
 #include <stdio.h> 
-#include "oslabs.h.h"
+#include "oslabs.h"
 
 #define QUEUEMAX 10
 
