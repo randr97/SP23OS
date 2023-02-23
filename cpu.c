@@ -41,8 +41,3 @@ struct PCB handle_process_arrival_pp(struct PCB ready_queue[QUEUEMAX],
         return new_process;
     }
 };
-
-int main(int argc, char *argv[]) {
-    printf("Successfully compiled!");
-    return 0;
-}
