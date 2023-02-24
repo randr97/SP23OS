@@ -93,7 +93,3 @@ struct PCB handle_process_arrival_srtp(struct PCB ready_queue[QUEUEMAX],
         return new_process;
     }
 }
-
-int main() {
-    return -1;
-}
