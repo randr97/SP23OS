@@ -62,7 +62,7 @@ struct PCB handle_process_completion_pp(struct PCB ready_queue[QUEUEMAX], int *q
         ready_queue[i] = NULL_PCB;
         highest_priority.execution_starttime = timestamp;
         highest_priority.execution_endtime = timestamp + highest_priority.remaining_bursttime;
-        (*queue_cnt)--;
+        // (*queue_cnt)--;
         return highest_priority;
     }
 }
