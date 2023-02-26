@@ -18,15 +18,6 @@ bool isNullPCB(struct PCB* process) {
     else return false;
 }
 
-void insert_into_queue(struct PCB ready_queue[], struct PCB process) {
-    for(int i=0;i<QUEUEMAX;i++) {
-        if(isNullPCB(&ready_queue[i])) {
-            ready_queue[i] = process;
-            return;
-        }
-    }
-}
-
 struct PCB handle_process_arrival_pp(struct PCB ready_queue[QUEUEMAX],
     int *queue_cnt, struct PCB current_process, struct PCB new_process, int timestamp)
 {
@@ -40,15 +31,11 @@ struct PCB handle_process_arrival_pp(struct PCB ready_queue[QUEUEMAX],
         new_process.execution_endtime = 0;
         new_process.execution_starttime = 0;
         new_process.remaining_bursttime = new_process.total_bursttime;
-        // insert_into_queue(ready_queue, new_process);
-        // ready_queue[new_process.process_id] = new_process;
         ready_queue[(*queue_cnt)++] = new_process;
         return current_process;
     } else {
         current_process.execution_endtime = 0;
         current_process.remaining_bursttime = current_process.remaining_bursttime - (timestamp - current_process.execution_starttime);
-        // insert_into_queue(ready_queue, current_process);
-        // ready_queue[current_process.process_id] = current_process;
         ready_queue[(*queue_cnt)++] = current_process;
         // new process
         new_process.execution_starttime = timestamp;
@@ -75,6 +62,7 @@ struct PCB handle_process_completion_pp(struct PCB ready_queue[QUEUEMAX], int *q
         ready_queue[i] = NULL_PCB;
         highest_priority.execution_starttime = timestamp;
         highest_priority.execution_endtime = timestamp + highest_priority.remaining_bursttime;
+        (*queue_cnt)--;
         return highest_priority;
     }
 }
@@ -92,16 +80,12 @@ struct PCB handle_process_arrival_srtp(struct PCB ready_queue[QUEUEMAX],
         new_process.execution_starttime = 0;
         new_process.execution_endtime = 0;
         new_process.remaining_bursttime = new_process.total_bursttime;
-        // insert_into_queue(ready_queue, new_process);
-        // ready_queue[new_process.process_id] = new_process;
         ready_queue[(*queue_cnt)++] = new_process;
         return current_process;
     } else {
         current_process.execution_starttime = 0;
         current_process.execution_endtime = 0;
         current_process.remaining_bursttime = current_process.remaining_bursttime - (time_stamp - current_process.execution_starttime);
-        // insert_into_queue(ready_queue, current_process);
-        // ready_queue[current_process.process_id] = current_process;
         ready_queue[(*queue_cnt)++] = current_process;
         // new process
         new_process.execution_starttime = time_stamp;
@@ -128,6 +112,7 @@ struct PCB handle_process_completion_srtp(struct PCB ready_queue[QUEUEMAX], int 
         ready_queue[i] = NULL_PCB;
         smallest_remaining_burst_time.execution_starttime = timestamp;
         smallest_remaining_burst_time.execution_endtime = timestamp + smallest_remaining_burst_time.remaining_bursttime;
+        (*queue_cnt)--;
         return smallest_remaining_burst_time;
     }
 }
@@ -143,8 +128,6 @@ struct PCB handle_process_arrival_rr(struct PCB ready_queue[QUEUEMAX],
         new_process.execution_starttime = 0;
         new_process.execution_endtime = 0;
         new_process.remaining_bursttime = new_process.total_bursttime;
-        // insert_into_queue(ready_queue, new_process);
-        // ready_queue[new_process.process_id] = new_process;
         ready_queue[(*queue_cnt)++] = new_process;
         return current_process;
     }
@@ -167,6 +150,7 @@ struct PCB handle_process_completion_rr(struct PCB ready_queue[QUEUEMAX], int *q
         ready_queue[i] = NULL_PCB;
         earliest_arrival_time.execution_starttime = timestamp;
         earliest_arrival_time.execution_endtime = timestamp + time_quantum < earliest_arrival_time.total_bursttime ? time_quantum: earliest_arrival_time.total_bursttime;
+        (*queue_cnt)--;
         return earliest_arrival_time;
     }   
 }
