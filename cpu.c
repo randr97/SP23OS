@@ -84,7 +84,6 @@ struct PCB handle_process_arrival_srtp(struct PCB ready_queue[QUEUEMAX],
     } else {
         current_process.execution_starttime = 0;
         current_process.execution_endtime = 0;
-        // current_process.remaining_bursttime = current_process.remaining_bursttime - (time_stamp - current_process.execution_starttime);
         current_process.remaining_bursttime = current_process.remaining_bursttime - current_process.arrival_timestamp;
         ready_queue[(*queue_cnt)++] = current_process;
         // new process
@@ -114,26 +113,6 @@ struct PCB handle_process_completion_srtp(struct PCB ready_queue[QUEUEMAX], int 
     smallest_remaining_burst_time.execution_starttime = timestamp;
     smallest_remaining_burst_time.execution_endtime = timestamp + smallest_remaining_burst_time.remaining_bursttime;
     return smallest_remaining_burst_time;
-
-    // int i, min = INT_MAX;
-    // struct PCB smallest_remaining_burst_time;
-    // for(i=0;i<QUEUEMAX;i++) {
-    //     if(!isNullPCB(&ready_queue[i])) {
-    //         if(ready_queue[i].remaining_bursttime < min) {
-    //             min = ready_queue[i].remaining_bursttime;
-    //             smallest_remaining_burst_time = ready_queue[i];
-    //         }
-    //     }
-    // }
-    // if(min == INT_MAX) {
-    //     return NULL_PCB;
-    // } else {
-    //     ready_queue[i] = NULL_PCB;
-    //     smallest_remaining_burst_time.execution_starttime = timestamp;
-    //     smallest_remaining_burst_time.execution_endtime = timestamp + smallest_remaining_burst_time.remaining_bursttime;
-    //     (*queue_cnt)--;
-    //     return smallest_remaining_burst_time;
-    // }
 }
 
 struct PCB handle_process_arrival_rr(struct PCB ready_queue[QUEUEMAX],
@@ -171,24 +150,4 @@ struct PCB handle_process_completion_rr(struct PCB ready_queue[QUEUEMAX], int *q
     earliest_arrival_time.execution_starttime = timestamp;
     earliest_arrival_time.execution_endtime = timestamp + (time_quantum < earliest_arrival_time.total_bursttime ? time_quantum: earliest_arrival_time.total_bursttime);
     return earliest_arrival_time;
-
-    // int i, min = INT_MAX;
-    // struct PCB earliest_arrival_time;
-    // for(i=0;i<QUEUEMAX;i++) {
-    //     if(!isNullPCB(&ready_queue[i])) {
-    //         if(ready_queue[i].arrival_timestamp < min) {
-    //             min = ready_queue[i].arrival_timestamp;
-    //             earliest_arrival_time = ready_queue[i];
-    //         }
-    //     }
-    // }
-    // if(min == INT_MAX) {
-    //     return NULL_PCB;
-    // } else {
-    //     ready_queue[i] = NULL_PCB;
-    //     earliest_arrival_time.execution_starttime = timestamp;
-    //     earliest_arrival_time.execution_endtime = timestamp + time_quantum < earliest_arrival_time.total_bursttime ? time_quantum: earliest_arrival_time.total_bursttime;
-    //     (*queue_cnt)--;
-    //     return earliest_arrival_time;
-    // }   
 }
