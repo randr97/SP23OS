@@ -46,25 +46,32 @@ struct PCB handle_process_arrival_pp(struct PCB ready_queue[QUEUEMAX],
 };
 
 struct PCB handle_process_completion_pp(struct PCB ready_queue[QUEUEMAX], int *queue_cnt, int timestamp) {
-    int i, min = INT_MAX;
+    // int i, min = INT_MAX;
     struct PCB highest_priority;
-    for(i=0;i<QUEUEMAX;i++) {
-        if(!isNullPCB(&ready_queue[i])) {
-            if(ready_queue[i].process_priority < min) {
-                min = ready_queue[i].process_priority;
-                highest_priority = ready_queue[i];
-            }
-        }
-    }
-    if(min == INT_MAX) {
-        return NULL_PCB;
-    } else {
-        ready_queue[i] = NULL_PCB;
+    // for(i=0;i<QUEUEMAX;i++) {
+    //     if(!isNullPCB(&ready_queue[i])) {
+    //         if(ready_queue[i].process_priority < min) {
+    //             min = ready_queue[i].process_priority;
+    //             highest_priority = ready_queue[i];
+    //         }
+    //     }
+    // }
+    // if(min == INT_MAX) {
+    //     return NULL_PCB;
+    // } else {
+    //     ready_queue[i] = NULL_PCB;
+    //     highest_priority.execution_starttime = timestamp;
+    //     highest_priority.execution_endtime = timestamp + highest_priority.remaining_bursttime;
+    //     // (*queue_cnt)--;
+    //     return highest_priority;
+    // }
+    if(!isNullPCB(&ready_queue[*queue_cnt])) {
+        highest_priority = ready_queue[*queue_cnt];
+        ready_queue[(*queue_cnt)--] = NULL_PCB;
         highest_priority.execution_starttime = timestamp;
         highest_priority.execution_endtime = timestamp + highest_priority.remaining_bursttime;
-        // (*queue_cnt)--;
         return highest_priority;
-    }
+    } else return NULL_PCB;
 }
 
 struct PCB handle_process_arrival_srtp(struct PCB ready_queue[QUEUEMAX],
