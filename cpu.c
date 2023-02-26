@@ -104,7 +104,7 @@ struct PCB handle_process_completion_srtp(struct PCB ready_queue[QUEUEMAX], int 
     for(i=0;i<(*queue_cnt);i++) {
         if(!isNullPCB(&ready_queue[i])) {
             if(ready_queue[i].remaining_bursttime < min) {
-                min = ready_queue[i].process_priority;
+                min = ready_queue[i].remaining_bursttime;
                 smallest_remaining_burst_time = ready_queue[i];
                 to_replace = i;
             }
@@ -161,7 +161,7 @@ struct PCB handle_process_completion_rr(struct PCB ready_queue[QUEUEMAX], int *q
     for(i=0;i<(*queue_cnt);i++) {
         if(!isNullPCB(&ready_queue[i])) {
             if(ready_queue[i].arrival_timestamp < min) {
-                min = ready_queue[i].process_priority;
+                min = ready_queue[i].arrival_timestamp;
                 earliest_arrival_time = ready_queue[i];
                 to_replace = i;
             }
@@ -171,7 +171,7 @@ struct PCB handle_process_completion_rr(struct PCB ready_queue[QUEUEMAX], int *q
     earliest_arrival_time.execution_starttime = timestamp;
     earliest_arrival_time.execution_endtime = timestamp + (time_quantum < earliest_arrival_time.total_bursttime ? time_quantum: earliest_arrival_time.total_bursttime);
     return earliest_arrival_time;
-    //
+
     // int i, min = INT_MAX;
     // struct PCB earliest_arrival_time;
     // for(i=0;i<QUEUEMAX;i++) {
