@@ -121,7 +121,7 @@ struct PCB handle_process_arrival_rr(struct PCB ready_queue[QUEUEMAX],
     int *queue_cnt, struct PCB current_process, struct PCB new_process, int timestamp, int time_quantum) {
     if(isNullPCB(&current_process)) {
         new_process.execution_starttime = timestamp;
-        new_process.execution_endtime = timestamp + time_quantum < new_process.total_bursttime ? time_quantum: new_process.total_bursttime;
+        new_process.execution_endtime = timestamp + (time_quantum < new_process.total_bursttime ? time_quantum: new_process.total_bursttime);
         new_process.remaining_bursttime = new_process.total_bursttime;
         return new_process;
     } else {
