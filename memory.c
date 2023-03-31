@@ -7,14 +7,26 @@
 
 struct MEMORY_BLOCK NULL_BLOCK = {0,0,0,0};
 
+struct MEMORY_BLOCK first_fit_allocate(int request_size, struct MEMORY_BLOCK memory_map[MAPMAX],int *map_cnt, int process_id) {
+    return NULL_BLOCK;
+}
+
+struct MEMORY_BLOCK worst_fit_allocate(int request_size, struct MEMORY_BLOCK memory_map[MAPMAX],int *map_cnt, int process_id) {
+    return NULL_BLOCK;
+}
+
+struct MEMORY_BLOCK next_fit_allocate(int request_size, struct MEMORY_BLOCK memory_map[MAPMAX],int *map_cnt, int process_id, int last_address) {
+    return NULL_BLOCK;
+}
+
 bool isNullBlock(struct MEMORY_BLOCK* o) {
     return o->start_address == 0 && o->end_address == 0 && o->segment_size == 0 && o->process_id == 0;
 }
 
-void insert(struct MEMORY_BLOCK arr[], int pos, struct MEMORY_BLOCK new_element) {
+void insert(struct MEMORY_BLOCK arr[], int pos, struct MEMORY_BLOCK new_element, int size) {
     int i;
     // shifting the elements to the right
-    for(i=sizeof(arr) - 1; i>pos; i--) {
+    for(i=size - 1; i>pos; i--) {
         arr[i] = arr[i-1];
     }
     arr[pos-1] = new_element;
@@ -79,7 +91,7 @@ struct MEMORY_BLOCK best_fit_allocate(
         request_size,
         process_id
     };
-    insert(memory_map, index, new_block);
+    insert(memory_map, index, new_block, map_cnt);
     memory_map[index + 1].start_address = memory_map[index].end_address + 1;
     memory_map[index + 1].segment_size = memory_map[index + 1].end_address - memory_map[index + 1].start_address + 1;
     map_cnt++;
