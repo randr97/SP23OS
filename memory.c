@@ -23,10 +23,10 @@ bool isNullBlock(struct MEMORY_BLOCK* o) {
     return o->start_address == 0 && o->end_address == 0 && o->segment_size == 0 && o->process_id == 0;
 }
 
-void insert(struct MEMORY_BLOCK arr[], int pos, struct MEMORY_BLOCK new_element, int size) {
+void insert(struct MEMORY_BLOCK arr[], int pos, struct MEMORY_BLOCK new_element, int *size) {
     int i;
     // shifting the elements to the right
-    for(i=size - 1; i>pos; i--) {
+    for(i=(*size) - 1; i>pos; i--) {
         arr[i] = arr[i-1];
     }
     arr[pos-1] = new_element;
@@ -35,7 +35,7 @@ void insert(struct MEMORY_BLOCK arr[], int pos, struct MEMORY_BLOCK new_element,
 void release_memory(struct MEMORY_BLOCK freed_block, struct MEMORY_BLOCK memory_map[MAPMAX], int *map_cnt) {
     int i, j;
     // finding the index of the freed block in memory map
-    for(i=0; i<*map_cnt; i++) {
+    for(i=0; i<(*map_cnt); i++) {
         if(memory_map[i].process_id == freed_block.process_id) {
             // marking the freed block as free
             memory_map[i].process_id = 0;
@@ -76,7 +76,7 @@ struct MEMORY_BLOCK best_fit_allocate(
 {
     int i;
     int diff_size = MAX_INPUT, index;
-    for(i=0; i<map_cnt; i++) {
+    for(i=0; i<(*map_cnt); i++) {
         if(memory_map[i].process_id == 0 && memory_map[i].segment_size >= request_size) {
             if(diff_size > memory_map[i].segment_size - request_size) {
                 diff_size = memory_map[i].segment_size - request_size;
@@ -97,3 +97,7 @@ struct MEMORY_BLOCK best_fit_allocate(
     map_cnt++;
     return new_block;
 }
+
+// int main() {
+//     return 1;
+// }
