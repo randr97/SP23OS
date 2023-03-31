@@ -7,7 +7,38 @@
 
 struct MEMORY_BLOCK NULL_BLOCK = {0,0,0,0};
 
-struct MEMORY_BLOCK first_fit_allocate(int request_size, struct MEMORY_BLOCK memory_map[MAPMAX],int *map_cnt, int process_id) {
+struct MEMORY_BLOCK first_fit_allocate(int request_size, struct MEMORY_BLOCK memory_map[MAPMAX], int *map_cnt, int process_id) {
+    int i;
+    // find the first free block that can fit the request
+    for(i = 0; i < (*map_cnt); i++) {
+        if(memory_map[i].process_id == 0 && memory_map[i].segment_size >= request_size) {
+            // found a free block that can fit the request
+            struct MEMORY_BLOCK allocated_block;
+            allocated_block.start_address = memory_map[i].start_address;
+            allocated_block.segment_size = request_size;
+            allocated_block.process_id = process_id;
+            allocated_block.end_address = allocated_block.start_address + allocated_block.segment_size - 1;
+
+            // split the block if it's larger than the requested size
+            if(memory_map[i].segment_size > request_size) {
+                struct MEMORY_BLOCK free_block;
+                free_block.start_address = allocated_block.end_address + 1;
+                free_block.segment_size = memory_map[i].segment_size - request_size;
+                free_block.process_id = 0;
+                free_block.end_address = free_block.start_address + free_block.segment_size - 1;
+
+                // insert the new free block after the allocated block
+                insert(memory_map, i + 1, free_block, map_cnt);
+            }
+
+            // update the allocated block in the memory map
+            memory_map[i] = allocated_block;
+
+            return allocated_block;
+        }
+    }
+
+    // no free block can fit the request
     return NULL_BLOCK;
 }
 
