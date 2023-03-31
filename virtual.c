@@ -4,14 +4,6 @@
 
 #include "oslabs.h"
 
-struct PTE {
-    int is_valid;
-    int frame_number;
-    int arrival_timestamp;
-    int last_access_timestamp;
-    int reference_count;
-};
-
 struct PTE NULL_PTE = {0,0,0,0,0};
 
 int process_page_access_fifo(struct PTE page_table[TABLEMAX], int *table_cnt, int page_number, int frame_pool[POOLMAX], int *frame_cnt, int current_timestamp) {
