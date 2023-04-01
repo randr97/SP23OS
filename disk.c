@@ -99,6 +99,8 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     int nearest_cylinder_distance = INT_MAX;
     int max_arrival_time = -1;
 
+    if((*queue_cnt) == 0) return NULL_RCB;
+
     for (int i = 0; i < *queue_cnt; i++) {
         struct RCB request = request_queue[i];
 
