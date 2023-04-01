@@ -44,34 +44,10 @@ struct RCB handle_request_arrival_sstf(struct RCB request_queue[QUEUEMAX], int *
     if (current_request.request_id == 0) {
         return new_request;
     }
-
-    // Add the new request to the request queue
+    // If disk is busy, add the new request to the queue
     request_queue[*queue_cnt] = new_request;
     *queue_cnt += 1;
-
-    // Calculate the difference between the cylinder of each request and the current cylinder of the disk head
-    int shortest_seek_time = INT_MAX;
-    int next_request_index = -1;
-    for (int i = 0; i < *queue_cnt; i++) {
-        int seek_time = abs(request_queue[i].cylinder - current_request.cylinder);
-        if (seek_time < shortest_seek_time) {
-            shortest_seek_time = seek_time;
-            next_request_index = i;
-        }
-    }
-
-    // If there is a request to service next, remove it from the request queue and return its RCB
-    if (next_request_index != -1) {
-        struct RCB next_request = request_queue[next_request_index];
-        for (int i = next_request_index; i < *queue_cnt - 1; i++) {
-            request_queue[i] = request_queue[i+1];
-        }
-        *queue_cnt -= 1;
-        return next_request;
-    }
-
-    // If there is no request to service next, return NULL_RCB
-    return NULL_RCB;
+    return current_request;
 }
 
 struct RCB handle_request_completion_sstf(struct RCB request_queue[QUEUEMAX], int *queue_cnt, int current_cylinder) {
