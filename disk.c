@@ -119,20 +119,12 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     
     // Pick the RCB to service next, based on the scan direction and whether there are requests with the same cylinder
     int next_index;
-    if (found_same_cylinder && earliest_arrival_time_index != -1) {
+    if (found_same_cylinder) {
         next_index = earliest_arrival_time_index;
     }
-    else if (found_same_cylinder) {
-        next_index = earliest_arrival_time_index;
-    }
-    else if (scan_direction == 1 && closest_cylinder_index != -1) {
-        next_index = closest_cylinder_index;
-    } else if (scan_direction == 0 && closest_cylinder_index != -1) {
+    else if (closest_cylinder_index != -1) {
         next_index = closest_cylinder_index;
     }
-    // else if (found_same_cylinder) {
-    //     next_index = earliest_arrival_time_index;
-    // }
     else {
         return NULL_RCB;
     }
@@ -142,6 +134,6 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     for (int i = next_index; i < *queue_cnt-1; i++) {
         request_queue[i] = request_queue[i+1];
     }
-    *queue_cnt -= 1;
+    (*queue_cnt)--;
     return next_request;
 }
