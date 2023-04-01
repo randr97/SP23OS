@@ -121,32 +121,55 @@ int process_page_access_lru(struct PTE page_table[TABLEMAX], int *table_cnt, int
 }
 
 int count_page_faults_lru(struct PTE page_table[TABLEMAX], int table_cnt, int reference_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
-    int page_fault_count = 0;
-    int current_timestamp = 1;
-    
+    int faults = 0;
+    int timestamp = 1;
+
     for (int i = 0; i < reference_cnt; i++) {
         int page_number = reference_string[i];
-        int frame_number = process_page_access_lru(page_table, &table_cnt, page_number, frame_pool, &frame_cnt, current_timestamp);
-        
-        if (frame_number == -1) {
-            // error occurred in process_page_access_lru function
-            return -1;
+
+        if (page_table[page_number].is_valid) {
+            page_table[page_number].last_access_timestamp = timestamp;
+            page_table[page_number].reference_count++;
+        } else {
+            if (frame_cnt > 0) {
+                int frame_number = frame_pool[--frame_cnt];
+                page_table[page_number].frame_number = frame_number;
+                page_table[page_number].is_valid = true;
+                page_table[page_number].arrival_timestamp = timestamp;
+                page_table[page_number].last_access_timestamp = timestamp;
+                page_table[page_number].reference_count = 1;
+                faults++;
+            } else {
+                int min_timestamp = INT_MAX;
+                int min_page_number = -1;
+
+                for (int j = 0; j < table_cnt; j++) {
+                    if (page_table[j].is_valid && page_table[j].last_access_timestamp < min_timestamp) {
+                        min_timestamp = page_table[j].last_access_timestamp;
+                        min_page_number = j;
+                    }
+                }
+
+                page_table[min_page_number].is_valid = false;
+                page_table[min_page_number].frame_number = -1;
+                page_table[min_page_number].arrival_timestamp = 0;
+                page_table[min_page_number].last_access_timestamp = 0;
+                page_table[min_page_number].reference_count = 0;
+
+                int frame_number = page_table[page_number].frame_number;
+                page_table[page_number].frame_number = frame_number;
+                page_table[page_number].is_valid = true;
+                page_table[page_number].arrival_timestamp = timestamp;
+                page_table[page_number].last_access_timestamp = timestamp;
+                page_table[page_number].reference_count = 1;
+                faults++;
+            }
         }
-        else if (frame_number == -2) {
-            // frame pool is empty, but no page can be replaced
-            return page_fault_count;
-        }
-        else if (frame_number == -3) {
-            // page number is invalid
-            return -1;
-        }
-        else {
-            // page fault occurred
-            page_fault_count++;
-        }
-        current_timestamp++;
+
+        timestamp++;
     }
-    return page_fault_count;
+
+    return faults;
 }
 
 int process_page_access_lfu(struct PTE page_table[TABLEMAX], int *table_cnt, int page_number, int frame_pool[POOLMAX], int *frame_cnt, int current_timestamp) {
@@ -202,6 +225,59 @@ int process_page_access_lfu(struct PTE page_table[TABLEMAX], int *table_cnt, int
     return free_frame_index;
 }
 
-int count_page_faults_lfu(struct PTE page_table[TABLEMAX],int table_cnt, int refrence_string[REFERENCEMAX],int reference_cnt,int frame_pool[POOLMAX],int frame_cnt) {
-    return 0;
+int count_page_faults_lfu(struct PTE page_table[TABLEMAX], int table_cnt, int refrence_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
+    int faults = 0;
+    int timestamp = 1;
+
+    for (int i = 0; i < reference_cnt; i++) {
+        int page_number = refrence_string[i];
+
+        if (page_table[page_number].is_valid) {
+            page_table[page_number].last_access_timestamp = timestamp;
+            page_table[page_number].reference_count++;
+        } else {
+            if (frame_cnt > 0) {
+                int frame_number = frame_pool[--frame_cnt];
+                page_table[page_number].frame_number = frame_number;
+                page_table[page_number].is_valid = true;
+                page_table[page_number].arrival_timestamp = timestamp;
+                page_table[page_number].last_access_timestamp = timestamp;
+                page_table[page_number].reference_count = 1;
+                faults++;
+            } else {
+                int min_count = INT_MAX;
+                int min_timestamp = INT_MAX;
+                int min_page_number = -1;
+
+                for (int j = 0; j < table_cnt; j++) {
+                    if (page_table[j].is_valid && page_table[j].reference_count < min_count) {
+                        min_count = page_table[j].reference_count;
+                        min_timestamp = page_table[j].arrival_timestamp;
+                        min_page_number = j;
+                    } else if (page_table[j].is_valid && page_table[j].reference_count == min_count && page_table[j].arrival_timestamp < min_timestamp) {
+                        min_timestamp = page_table[j].arrival_timestamp;
+                        min_page_number = j;
+                    }
+                }
+
+                page_table[min_page_number].is_valid = false;
+                page_table[min_page_number].frame_number = -1;
+                page_table[min_page_number].arrival_timestamp = 0;
+                page_table[min_page_number].last_access_timestamp = 0;
+                page_table[min_page_number].reference_count = 0;
+
+                int frame_number = page_table[page_number].frame_number;
+                page_table[page_number].frame_number = frame_number;
+                page_table[page_number].is_valid = true;
+                page_table[page_number].arrival_timestamp = timestamp;
+                page_table[page_number].last_access_timestamp = timestamp;
+                page_table[page_number].reference_count = 1;
+                faults++;
+            }
+        }
+
+        timestamp++;
+    }
+
+    return faults;
 }
