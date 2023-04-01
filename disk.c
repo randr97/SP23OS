@@ -38,11 +38,69 @@ struct RCB handle_request_completion_fcfs(struct RCB request_queue[QUEUEMAX], in
     return earliest_request;
 }
 
-struct RCB handle_request_arrival_sstf(struct RCB request_queue[QUEUEMAX],int *queue_cnt, struct RCB current_request, struct RCB new_request, int timestamp) {
+struct RCB handle_request_arrival_sstf(struct RCB request_queue[QUEUEMAX], int *queue_cnt, struct RCB current_request, struct RCB new_request, int timestamp) {
+    // If disk is free, service the new request immediately
+    if (current_request.request_id == 0) {
+        return new_request;
+    }
+
+    // Add the new request to the request queue
+    request_queue[*queue_cnt] = new_request;
+    *queue_cnt += 1;
+
+    // Calculate the difference between the cylinder of each request and the current cylinder of the disk head
+    int shortest_seek_time = INT_MAX;
+    int next_request_index = -1;
+    for (int i = 0; i < *queue_cnt; i++) {
+        int seek_time = abs(request_queue[i].cylinder - current_request.cylinder);
+        if (seek_time < shortest_seek_time) {
+            shortest_seek_time = seek_time;
+            next_request_index = i;
+        }
+    }
+
+    // If there is a request to service next, remove it from the request queue and return its RCB
+    if (next_request_index != -1) {
+        struct RCB next_request = request_queue[next_request_index];
+        for (int i = next_request_index; i < *queue_cnt - 1; i++) {
+            request_queue[i] = request_queue[i+1];
+        }
+        *queue_cnt -= 1;
+        return next_request;
+    }
+
+    // If there is no request to service next, return NULL_RCB
     return NULL_RCB;
 }
 
-struct RCB handle_request_completion_sstf(struct RCB request_queue[QUEUEMAX],int *queue_cnt,int current_cylinder) {
+struct RCB handle_request_completion_sstf(struct RCB request_queue[QUEUEMAX], int *queue_cnt, int current_cylinder) {
+    // Initialize variables to track the RCB with the shortest seek time and earliest arrival time
+    int shortest_seek_time = INT_MAX;
+    int earliest_arrival_time = INT_MAX;
+    int next_request_index = -1;
+
+    // Loop through the request queue and find the RCB with the shortest seek time and earliest arrival time
+    for (int i = 0; i < *queue_cnt; i++) {
+        int seek_time = abs(request_queue[i].cylinder - current_cylinder);
+        int arrival_time = request_queue[i].arrival_timestamp;
+        if (seek_time < shortest_seek_time || (seek_time == shortest_seek_time && arrival_time < earliest_arrival_time)) {
+            shortest_seek_time = seek_time;
+            earliest_arrival_time = arrival_time;
+            next_request_index = i;
+        }
+    }
+
+    // If there is a request to service next, remove it from the request queue and return its RCB
+    if (next_request_index != -1) {
+        struct RCB next_request = request_queue[next_request_index];
+        for (int i = next_request_index; i < *queue_cnt - 1; i++) {
+            request_queue[i] = request_queue[i+1];
+        }
+        *queue_cnt -= 1;
+        return next_request;
+    }
+
+    // If there is no request to service next, return NULL_RCB
     return NULL_RCB;
 }
 
