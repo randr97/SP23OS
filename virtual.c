@@ -63,14 +63,22 @@ int process_page_access_fifo(struct PTE page_table[TABLEMAX], int *table_cnt, in
 int count_page_faults_fifo(struct PTE page_table[TABLEMAX], int table_cnt, int reference_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
     int faults = 0;
     int timestamp = 1;
-    int queue[POOLMAX];
-    int front = 0, rear = -1;
+    int oldest_timestamp = 1;
+    int oldest_page_number = -1;
+
+    if(table_cnt == 0) {
+        int i;
+        for(i=0; i<TABLEMAX; i++) {
+            page_table[i].is_valid = 0;
+        }
+    }
 
     for (int i = 0; i < reference_cnt; i++) {
         int page_number = reference_string[i];
         timestamp++;
         if (page_table[page_number].is_valid) {
             page_table[page_number].last_access_timestamp = timestamp;
+            page_table[page_number].reference_count++;
         } else {
             if (frame_cnt > 0) {
                 int frame_number = frame_pool[--frame_cnt];
@@ -78,30 +86,32 @@ int count_page_faults_fifo(struct PTE page_table[TABLEMAX], int table_cnt, int r
                 page_table[page_number].is_valid = true;
                 page_table[page_number].arrival_timestamp = timestamp;
                 page_table[page_number].last_access_timestamp = timestamp;
+                page_table[page_number].reference_count = 1;
                 faults++;
-
-                // Add page to the end of the queue
-                rear++;
-                queue[rear] = page_number;
             } else {
-                // Remove page at the front of the queue
-                int evicted_page_number = queue[front];
-                front++;
+                oldest_timestamp = INT_MAX;
+                oldest_page_number = -1;
 
-                page_table[evicted_page_number].is_valid = false;
-                page_table[evicted_page_number].frame_number = -1;
-                page_table[evicted_page_number].arrival_timestamp = 0;
-                page_table[evicted_page_number].last_access_timestamp = 0;
+                for (int j = 0; j < table_cnt; j++) {
+                    if (page_table[j].is_valid && page_table[j].arrival_timestamp < oldest_timestamp) {
+                        oldest_timestamp = page_table[j].arrival_timestamp;
+                        oldest_page_number = j;
+                    }
+                }
 
-                // Add new page to the end of the queue
+                page_table[oldest_page_number].is_valid = false;
+                page_table[oldest_page_number].frame_number = -1;
+                page_table[oldest_page_number].arrival_timestamp = 0;
+                page_table[oldest_page_number].last_access_timestamp = 0;
+                page_table[oldest_page_number].reference_count = 0;
+
                 int frame_number = page_table[page_number].frame_number;
                 page_table[page_number].frame_number = frame_number;
                 page_table[page_number].is_valid = true;
                 page_table[page_number].arrival_timestamp = timestamp;
                 page_table[page_number].last_access_timestamp = timestamp;
+                page_table[page_number].reference_count = 1;
                 faults++;
-                rear++;
-                queue[rear] = page_number;
             }
         }
     }
