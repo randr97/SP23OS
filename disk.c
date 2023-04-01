@@ -100,6 +100,17 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     // Initialize variables to keep track of the earliest RCB with the same cylinder
     struct RCB earliest_same_cylinder = NULL_RCB;
     int earliest_arrival_time = INT_MAX;
+
+    // // find for same
+    // for (int i = 0; i < *queue_cnt; i++) {
+    //     struct RCB current_rcb = request_queue[i];
+    //     if (current_rcb.cylinder == current_cylinder) {
+    //         if (current_rcb.arrival_timestamp < earliest_arrival_time) {
+    //             earliest_same_cylinder = current_rcb;
+    //             earliest_arrival_time = current_rcb.arrival_timestamp;
+    //         }
+    //     }
+    // }
     
     // Find the closest RCB in each direction and the earliest RCB with the same cylinder
     for (int i = 0; i < *queue_cnt; i++) {
@@ -120,7 +131,7 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
         }
     }
 
-    if(earliest_same_cylinder.cylinder != 0) {
+    if(earliest_same_cylinder.process_id != 0) {
         return earliest_same_cylinder;
     }
 
