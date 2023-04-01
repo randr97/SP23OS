@@ -131,7 +131,7 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
         }
     }
 
-    if(earliest_same_cylinder.process_id != 0) {
+    if(earliest_same_cylinder.request_id != 0) {
         return earliest_same_cylinder;
     }
 
