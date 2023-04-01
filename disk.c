@@ -119,21 +119,21 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
             }
         }
     }
-    
+
+    if(earliest_same_cylinder.cylinder != 0) {
+        return earliest_same_cylinder;
+    }
+
     // Determine which RCB to service next based on the current direction and the RCBs found above
     if (scan_direction == 1) {
         if (closest_higher.cylinder != 0) {
             return closest_higher;
-        } else if (earliest_same_cylinder.cylinder != 0) {
-            return earliest_same_cylinder;
         } else {
             return closest_lower;
         }
     } else {
         if (closest_lower.cylinder != 0) {
             return closest_lower;
-        } else if (earliest_same_cylinder.cylinder != 0) {
-            return earliest_same_cylinder;
         } else {
             return closest_higher;
         }
