@@ -61,7 +61,57 @@ int process_page_access_fifo(struct PTE page_table[TABLEMAX], int *table_cnt, in
 }
 
 int count_page_faults_fifo(struct PTE page_table[TABLEMAX], int table_cnt, int reference_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
-    return 0;
+    int timestamp = 1;
+    int page_faults = 0;
+    int frame_index = 0;
+
+    for (int i = 0; i < reference_cnt; i++) {
+        int logical_page_number = reference_string[i];
+        struct PTE page_entry = page_table[logical_page_number];
+
+        if (page_entry.is_valid) {
+            page_table[logical_page_number].last_access_timestamp = timestamp;
+            page_table[logical_page_number].reference_count++;
+        } else {
+            if (frame_index < frame_cnt) {
+                int frame_number = frame_pool[frame_index++];
+                page_table[logical_page_number].frame_number = frame_number;
+                page_table[logical_page_number].is_valid = 1;
+                page_table[logical_page_number].arrival_timestamp = timestamp;
+                page_table[logical_page_number].last_access_timestamp = timestamp;
+                page_table[logical_page_number].reference_count = 1;
+                page_faults++;
+            } else {
+                int oldest_page_index = -1;
+                int oldest_timestamp = INT_MAX;
+
+                for (int j = 0; j < table_cnt; j++) {
+                    if (page_table[j].is_valid && page_table[j].arrival_timestamp < oldest_timestamp) {
+                        oldest_page_index = j;
+                        oldest_timestamp = page_table[j].arrival_timestamp;
+                    }
+                }
+
+                page_table[oldest_page_index].is_valid = 0;
+                page_table[oldest_page_index].frame_number = -1;
+                page_table[oldest_page_index].arrival_timestamp = -1;
+                page_table[oldest_page_index].last_access_timestamp = -1;
+                page_table[oldest_page_index].reference_count = -1;
+
+                int frame_number = page_table[logical_page_number].frame_number;
+                page_table[logical_page_number].frame_number = frame_number;
+                page_table[logical_page_number].is_valid = 1;
+                page_table[logical_page_number].arrival_timestamp = timestamp;
+                page_table[logical_page_number].last_access_timestamp = timestamp;
+                page_table[logical_page_number].reference_count = 1;
+                page_faults++;
+            }
+        }
+
+        timestamp++;
+    }
+
+    return page_faults;
 }
 
 int process_page_access_lru(struct PTE page_table[TABLEMAX], int *table_cnt, int page_number, int frame_pool[POOLMAX], int *frame_cnt, int current_timestamp) {
