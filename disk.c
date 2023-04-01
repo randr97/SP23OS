@@ -97,10 +97,20 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     int earliest_arrival_time = INT_MAX;
     int closest_cylinder_index = -1;
     int earliest_arrival_time_index = -1;
+    //
+    int closest_positive_diff = INT_MAX;
+    int closest_negative_diff = INT_MAX;
+    int closest_positive_index = -1;
+    int closest_negative_index = -1;
+    //
     bool found_same_cylinder = false;
     bool found_larger = false;
     bool found_small = false;
-    
+
+    if((*queue_cnt) == 0) {
+        return NULL_RCB;
+    }
+
     // Find the RCB with the earliest arrival time and/or the closest cylinder, based on the scan direction
     for (int i = 0; i < *queue_cnt; i++) {
         if (request_queue[i].cylinder == current_cylinder) {
@@ -111,30 +121,18 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
             }
         }
         // else if ((scan_direction == 1 && request_queue[i].cylinder > current_cylinder) || (scan_direction == 0 && request_queue[i].cylinder < current_cylinder))
-        else if (scan_direction == 1)
-        {
-            int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
-            if (cylinder_diff < closest_cylinder_diff) {
-                closest_cylinder_diff = cylinder_diff;
-                closest_cylinder_index = i;
-            }
-            if (request_queue[i].cylinder > current_cylinder && !found_larger) {
-                closest_cylinder_diff = cylinder_diff;
-                closest_cylinder_index = i;
-                found_larger = true;
-            }
-        } else {
-            int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
-            if (cylinder_diff < closest_cylinder_diff) {
-                closest_cylinder_diff = cylinder_diff;
-                closest_cylinder_index = i;
-                found_small = true;
-            }
-            if (request_queue[i].cylinder > current_cylinder && !found_small) {
-                closest_cylinder_diff = cylinder_diff;
-                closest_cylinder_index = i;
-                found_small = true;
-            }
+        int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
+        if (cylinder_diff < closest_cylinder_diff && !found_larger) {
+            closest_cylinder_diff = cylinder_diff;
+            closest_cylinder_index = i;
+        }
+        if(cylinder_diff < closest_positive_diff && request_queue[i].cylinder > current_cylinder) {
+            closest_positive_diff = cylinder_diff;
+            closest_positive_index = i;
+        }
+        if(cylinder_diff < closest_negative_diff && request_queue[i].cylinder < current_cylinder) {
+            closest_negative_diff = cylinder_diff;
+            closest_negative_index = i;
         }
     }
     
@@ -143,11 +141,23 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     if (found_same_cylinder) {
         next_index = earliest_arrival_time_index;
     }
-    else if (closest_cylinder_index != -1) {
-        next_index = closest_cylinder_index;
-    }
     else {
-        return NULL_RCB;
+        if(scan_direction == 1) {
+            if(closest_positive_index != -1) {
+                next_index = closest_positive_index;
+            }
+            else {
+                next_index = closest_cylinder_index;
+            }
+        }
+        else {
+            if(closest_negative_diff != -1) {
+                next_index = closest_negative_diff;
+            }
+            else {
+                next_index = closest_cylinder_index;
+            }
+        }
     }
     
     // Remove the RCB from the request queue and return it
