@@ -120,19 +120,20 @@ int process_page_access_lru(struct PTE page_table[TABLEMAX], int *table_cnt, int
     return frame_to_replace;
 }
 
-int count_page_faults_lru(struct PTE page_table[TABLEMAX], int table_cnt, int reference_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
+int count_page_faults_lru(struct PTE page_table[TABLEMAX], int table_cnt, int refrence_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
     int faults = 0;
     int timestamp = 1;
+    int num_frames_used = 0;
 
     for (int i = 0; i < reference_cnt; i++) {
-        int page_number = reference_string[i];
+        int page_number = refrence_string[i];
 
         if (page_table[page_number].is_valid) {
             page_table[page_number].last_access_timestamp = timestamp;
             page_table[page_number].reference_count++;
         } else {
-            if (frame_cnt > 0) {
-                int frame_number = frame_pool[--frame_cnt];
+            if (num_frames_used < frame_cnt) {
+                int frame_number = frame_pool[num_frames_used++];
                 page_table[page_number].frame_number = frame_number;
                 page_table[page_number].is_valid = true;
                 page_table[page_number].arrival_timestamp = timestamp;
