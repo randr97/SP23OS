@@ -82,9 +82,57 @@ struct RCB handle_request_completion_sstf(struct RCB request_queue[QUEUEMAX], in
 }
 
 struct RCB handle_request_arrival_look(struct RCB request_queue[QUEUEMAX],int *queue_cnt, struct RCB current_request, struct RCB new_request, int timestamp) {
-    return NULL_RCB;
+    // If disk is free, service the new request immediately
+    if (current_request.request_id == 0) {
+        return new_request;
+    }
+    // If disk is busy, add the new request to the queue
+    request_queue[*queue_cnt] = new_request;
+    *queue_cnt += 1;
+    return current_request;
 }
 
-struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX],int *queue_cnt, int current_cylinder, int scan_direction) {
-    return NULL_RCB;
+struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], int *queue_cnt, int current_cylinder, int scan_direction) {
+    
+    // If request queue is empty, return NULLRCB
+    if (*queue_cnt == 0) {
+        return NULL_RCB;
+    }
+    
+    // Find the next request to service
+    int next_request_idx = -1; // index of the next request to service in the queue
+    int min_distance = INT_MAX; // min distance between current cylinder and request cylinder
+    
+    for (int i = 0; i < *queue_cnt; i++) {
+        if (request_queue[i].cylinder == current_cylinder) {
+            if (request_queue[i].arrival_timestamp < request_queue[next_request_idx].arrival_timestamp || next_request_idx == -1) {
+                next_request_idx = i;
+            }
+        } else if (scan_direction == 1 && request_queue[i].cylinder > current_cylinder) {
+            int distance = request_queue[i].cylinder - current_cylinder;
+            if (distance < min_distance) {
+                next_request_idx = i;
+                min_distance = distance;
+            }
+        } else if (scan_direction == 1 && i == *queue_cnt - 1) {
+            next_request_idx = i;
+        } else if (scan_direction == 0 && request_queue[i].cylinder < current_cylinder) {
+            int distance = current_cylinder - request_queue[i].cylinder;
+            if (distance < min_distance) {
+                next_request_idx = i;
+                min_distance = distance;
+            }
+        } else if (scan_direction == 0 && i == *queue_cnt - 1) {
+            next_request_idx = i;
+        }
+    }
+    
+    // Remove the next request to service from the queue
+    struct RCB next_request = request_queue[next_request_idx];
+    for (int i = next_request_idx; i < *queue_cnt - 1; i++) {
+        request_queue[i] = request_queue[i + 1];
+    }
+    *queue_cnt -= 1;
+    
+    return next_request;
 }
