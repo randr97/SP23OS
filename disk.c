@@ -98,6 +98,8 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
     int closest_cylinder_index = -1;
     int earliest_arrival_time_index = -1;
     bool found_same_cylinder = false;
+    bool found_larger = false;
+    bool found_small = false;
     
     // Find the RCB with the earliest arrival time and/or the closest cylinder, based on the scan direction
     for (int i = 0; i < *queue_cnt; i++) {
@@ -108,12 +110,30 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
                 earliest_arrival_time_index = i;
             }
         }
-        else
+        // else if ((scan_direction == 1 && request_queue[i].cylinder > current_cylinder) || (scan_direction == 0 && request_queue[i].cylinder < current_cylinder))
+        else if (scan_direction == 1)
         {
             int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
             if (cylinder_diff < closest_cylinder_diff) {
                 closest_cylinder_diff = cylinder_diff;
                 closest_cylinder_index = i;
+            }
+            if (request_queue[i].cylinder > current_cylinder && !found_larger) {
+                closest_cylinder_diff = cylinder_diff;
+                closest_cylinder_index = i;
+                found_larger = true;
+            }
+        } else {
+            int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
+            if (cylinder_diff < closest_cylinder_diff) {
+                closest_cylinder_diff = cylinder_diff;
+                closest_cylinder_index = i;
+                found_small = true;
+            }
+            if (request_queue[i].cylinder > current_cylinder && !found_small) {
+                closest_cylinder_diff = cylinder_diff;
+                closest_cylinder_index = i;
+                found_small = true;
             }
         }
     }
