@@ -61,54 +61,15 @@ int process_page_access_fifo(struct PTE page_table[TABLEMAX], int *table_cnt, in
 }
 
 int count_page_faults_fifo(struct PTE page_table[TABLEMAX], int table_cnt, int reference_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
-    int timestamp = 1;
     int page_faults = 0;
-    int frame_index = 0;
-
+    int frames_used = 0;
     for (int i = 0; i < reference_cnt; i++) {
-        int logical_page = reference_string[i];
-        struct PTE* page_entry = &page_table[logical_page];
-
-        if (page_entry->is_valid) {
-            page_entry->last_access_timestamp = timestamp;
-            page_entry->reference_count++;
-        } else {
-            if (frame_index < frame_cnt) {
-                page_entry->frame_number = frame_pool[frame_index++];
-                page_entry->is_valid = true;
-                page_entry->arrival_timestamp = timestamp;
-                page_entry->last_access_timestamp = timestamp;
-                page_entry->reference_count = 1;
-                page_faults++;
-            } else {
-                int oldest_timestamp = INT_MAX;
-                int oldest_page = -1;
-                for (int j = 0; j < table_cnt; j++) {
-                    if (page_table[j].is_valid && page_table[j].arrival_timestamp < oldest_timestamp) {
-                        oldest_timestamp = page_table[j].arrival_timestamp;
-                        oldest_page = j;
-                    }
-                }
-
-                struct PTE* oldest_page_entry = &page_table[oldest_page];
-                oldest_page_entry->is_valid = false;
-                oldest_page_entry->frame_number = -1;
-                oldest_page_entry->arrival_timestamp = -1;
-                oldest_page_entry->last_access_timestamp = -1;
-                oldest_page_entry->reference_count = -1;
-
-                page_entry->frame_number = oldest_page_entry->frame_number;
-                page_entry->is_valid = true;
-                page_entry->arrival_timestamp = timestamp;
-                page_entry->last_access_timestamp = timestamp;
-                page_entry->reference_count = 1;
-                page_faults++;
-            }
+        int page_number = reference_string[i];
+        int frame_number = process_page_access_fifo(page_table, &table_cnt, page_number, frame_pool, &frame_cnt, i);
+        if (frame_number == -1) {
+            page_faults++;
         }
-
-        timestamp++;
     }
-
     return page_faults;
 }
 
