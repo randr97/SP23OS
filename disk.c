@@ -93,78 +93,61 @@ struct RCB handle_request_arrival_look(struct RCB request_queue[QUEUEMAX],int *q
 }
 
 struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], int *queue_cnt, int current_cylinder, int scan_direction) {
-    int closest_cylinder_diff = INT_MAX;
+    struct RCB next_request = NULL_RCB;
+    int shortest_distance = INT_MAX;
     int earliest_arrival_time = INT_MAX;
-    int closest_cylinder_index = -1;
-    int earliest_arrival_time_index = -1;
-    //
-    int closest_positive_diff = INT_MAX;
-    int closest_negative_diff = INT_MAX;
-    int closest_positive_index = -1;
-    int closest_negative_index = -1;
-    //
-    bool found_same_cylinder = false;
-    bool found_larger = false;
-    bool found_small = false;
 
-    if((*queue_cnt) == 0) {
+    // Check if queue is empty
+    if (*queue_cnt == 0) {
         return NULL_RCB;
     }
 
-    // Find the RCB with the earliest arrival time and/or the closest cylinder, based on the scan direction
+    // Find the request with earliest arrival time and closest cylinder
     for (int i = 0; i < *queue_cnt; i++) {
-        if (request_queue[i].cylinder == current_cylinder) {
-            found_same_cylinder = true;
-            if (request_queue[i].arrival_timestamp < earliest_arrival_time) {
-                earliest_arrival_time = request_queue[i].arrival_timestamp;
-                earliest_arrival_time_index = i;
+        struct RCB request = request_queue[i];
+        int distance = abs(request.cylinder - current_cylinder);
+
+        // Check if request has same cylinder as current cylinder
+        if (request.cylinder == current_cylinder) {
+            if (request.arrival_timestamp < earliest_arrival_time) {
+                next_request = request;
+                earliest_arrival_time = request.arrival_timestamp;
             }
         }
-        // else if ((scan_direction == 1 && request_queue[i].cylinder > current_cylinder) || (scan_direction == 0 && request_queue[i].cylinder < current_cylinder))
-        int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
-        if (cylinder_diff < closest_cylinder_diff && !found_larger) {
-            closest_cylinder_diff = cylinder_diff;
-            closest_cylinder_index = i;
+        // Check if scan direction is 1 and request has a larger cylinder than current cylinder
+        else if (scan_direction == 1 && request.cylinder > current_cylinder) {
+            if (distance < shortest_distance) {
+                next_request = request;
+                shortest_distance = distance;
+            }
         }
-        if(cylinder_diff < closest_positive_diff && request_queue[i].cylinder > current_cylinder) {
-            closest_positive_diff = cylinder_diff;
-            closest_positive_index = i;
+        // Check if scan direction is 1 and there are no requests with larger cylinders than current cylinder
+        else if (scan_direction == 1 && i == (*queue_cnt - 1)) {
+            next_request = request;
         }
-        if(cylinder_diff < closest_negative_diff && request_queue[i].cylinder < current_cylinder) {
-            closest_negative_diff = cylinder_diff;
-            closest_negative_index = i;
+        // Check if scan direction is 0 and request has a smaller cylinder than current cylinder
+        else if (scan_direction == 0 && request.cylinder < current_cylinder) {
+            if (distance < shortest_distance) {
+                next_request = request;
+                shortest_distance = distance;
+            }
+        }
+        // Check if scan direction is 0 and there are no requests with smaller cylinders than current cylinder
+        else if (scan_direction == 0 && i == (*queue_cnt - 1)) {
+            next_request = request;
         }
     }
-    
-    // Pick the RCB to service next, based on the scan direction and whether there are requests with the same cylinder
-    int next_index;
-    if (found_same_cylinder) {
-        next_index = earliest_arrival_time_index;
-    }
-    else {
-        if(scan_direction == 1) {
-            if(closest_positive_index != -1) {
-                next_index = closest_positive_index;
+
+    // Remove the next_request from the request queue
+    for (int i = 0; i < *queue_cnt; i++) {
+        if (request_queue[i].request_id == next_request.request_id) {
+            for (int j = i; j < (*queue_cnt - 1); j++) {
+                request_queue[j] = request_queue[j + 1];
             }
-            else {
-                next_index = closest_cylinder_index;
-            }
-        }
-        else {
-            if(closest_negative_diff != -1) {
-                next_index = closest_negative_diff;
-            }
-            else {
-                next_index = closest_cylinder_index;
-            }
+            (*queue_cnt)--;
+            break;
         }
     }
-    
-    // Remove the RCB from the request queue and return it
-    struct RCB next_request = request_queue[next_index];
-    for (int i = next_index; i < *queue_cnt-1; i++) {
-        request_queue[i] = request_queue[i+1];
-    }
-    (*queue_cnt)--;
+
     return next_request;
 }
