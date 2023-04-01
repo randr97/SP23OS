@@ -93,51 +93,52 @@ struct RCB handle_request_arrival_look(struct RCB request_queue[QUEUEMAX],int *q
 }
 
 struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], int *queue_cnt, int current_cylinder, int scan_direction) {
-    struct RCB next_request = NULL_RCB;
-    int shortest_distance = INT_MAX;
-    int earliest_arrival_time = INT_MAX;
+    int earliest_same_cylinder_idx = -1;
+    int nearest_larger_cylinder_idx = -1;
+    int nearest_smaller_cylinder_idx = -1;
+    int nearest_cylinder_distance = INT_MAX;
+    int max_arrival_time = -1;
 
-    // Check if queue is empty
-    if (*queue_cnt == 0) {
-        return NULL_RCB;
-    }
-
-    // Find the request with earliest arrival time and closest cylinder
     for (int i = 0; i < *queue_cnt; i++) {
         struct RCB request = request_queue[i];
-        int distance = abs(request.cylinder - current_cylinder);
 
-        // Check if request has same cylinder as current cylinder
         if (request.cylinder == current_cylinder) {
-            if (request.arrival_timestamp < earliest_arrival_time) {
-                next_request = request;
-                earliest_arrival_time = request.arrival_timestamp;
+            if (earliest_same_cylinder_idx == -1 || request.arrival_timestamp < request_queue[earliest_same_cylinder_idx].arrival_timestamp) {
+                earliest_same_cylinder_idx = i;
+            }
+        } else if (request.cylinder > current_cylinder) {
+            int distance = request.cylinder - current_cylinder;
+            if (nearest_larger_cylinder_idx == -1 || (distance < nearest_cylinder_distance) || (distance == nearest_cylinder_distance && request.cylinder > request_queue[nearest_larger_cylinder_idx].cylinder)) {
+                nearest_larger_cylinder_idx = i;
+                nearest_cylinder_distance = distance;
+            }
+        } else {
+            int distance = current_cylinder - request.cylinder;
+            if (nearest_smaller_cylinder_idx == -1 || (distance < nearest_cylinder_distance) || (distance == nearest_cylinder_distance && request.cylinder < request_queue[nearest_smaller_cylinder_idx].cylinder)) {
+                nearest_smaller_cylinder_idx = i;
+                nearest_cylinder_distance = distance;
             }
         }
-        // Check if scan direction is 1 and request has a larger cylinder than current cylinder
-        else if (scan_direction == 1 && request.cylinder > current_cylinder) {
-            if (distance < shortest_distance) {
-                next_request = request;
-                shortest_distance = distance;
-            }
-        }
-        // Check if scan direction is 1 and there are no requests with larger cylinders than current cylinder
-        else if (scan_direction == 1 && i == (*queue_cnt - 1)) {
-            next_request = request;
-        }
-        // Check if scan direction is 0 and request has a smaller cylinder than current cylinder
-        else if (scan_direction == 0 && request.cylinder < current_cylinder) {
-            if (distance < shortest_distance) {
-                next_request = request;
-                shortest_distance = distance;
-            }
-        }
-        // Check if scan direction is 0 and there are no requests with smaller cylinders than current cylinder
-        else if (scan_direction == 0 && i == (*queue_cnt - 1)) {
-            next_request = request;
+
+        if (request.arrival_timestamp > max_arrival_time) {
+            max_arrival_time = request.arrival_timestamp;
         }
     }
 
+    int next_request_idx;
+    if(earliest_same_cylinder_idx != -1) {
+        next_request_idx = earliest_same_cylinder_idx;
+    }
+    else if(scan_direction == 1) {
+        if(nearest_larger_cylinder_idx != -1) next_request_idx = nearest_larger_cylinder_idx;
+        else next_request_idx = nearest_cylinder_distance;
+    }
+    else {
+        if(nearest_smaller_cylinder_idx != -1) next_request_idx = nearest_smaller_cylinder_idx;
+        else next_request_idx = nearest_cylinder_distance;
+    }
+
+    struct RCB next_request = request_queue[next_request_idx];
     // Remove the next_request from the request queue
     for (int i = 0; i < *queue_cnt; i++) {
         if (request_queue[i].request_id == next_request.request_id) {
