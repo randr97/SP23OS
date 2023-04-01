@@ -62,13 +62,14 @@ int process_page_access_fifo(struct PTE page_table[TABLEMAX], int *table_cnt, in
 
 int count_page_faults_fifo(struct PTE page_table[TABLEMAX], int table_cnt, int reference_string[REFERENCEMAX], int reference_cnt, int frame_pool[POOLMAX], int frame_cnt) {
     int page_faults = 0;
-    int frames_used = 0;
+    int current_timestamp = 0;
     for (int i = 0; i < reference_cnt; i++) {
         int page_number = reference_string[i];
-        int frame_number = process_page_access_fifo(page_table, &table_cnt, page_number, frame_pool, &frame_cnt, i);
+        int frame_number = process_page_access_fifo(page_table, &table_cnt, page_number, frame_pool, &frame_cnt, current_timestamp);
         if (frame_number == -1) {
             page_faults++;
         }
+        current_timestamp++;
     }
     return page_faults;
 }
