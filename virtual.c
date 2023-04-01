@@ -125,7 +125,6 @@ int count_page_faults_lru(struct PTE page_table[TABLEMAX],int table_cnt, int ref
 }
 
 int process_page_access_lfu(struct PTE page_table[TABLEMAX],int *table_cnt, int page_number, int frame_pool[POOLMAX],int *frame_cnt, int current_timestamp) {
-
     // check if page is already in memory
     if (page_table[page_number].is_valid == 1) {
         // update last access time and reference count
@@ -134,7 +133,6 @@ int process_page_access_lfu(struct PTE page_table[TABLEMAX],int *table_cnt, int 
         // return the frame number
         return page_table[page_number].frame_number;
     }
-    
     // check if there are free frames
     if (*frame_cnt > 0) {
         // get a frame from the frame pool
@@ -149,13 +147,12 @@ int process_page_access_lfu(struct PTE page_table[TABLEMAX],int *table_cnt, int 
         // return the frame number
         return frame_number;
     }
-    
     // no free frames, replace a page using LFU policy
-    int min_reference_count = INT_MAX;
+    int least_freq_count = INT_MAX;
     int frame_to_replace = -1;
     for (int i = 0; i < *table_cnt; i++) {
-        if (page_table[i].is_valid == 1 && page_table[i].reference_count < min_reference_count) {
-            min_reference_count = page_table[i].reference_count;
+        if (page_table[i].is_valid == 1 && page_table[i].reference_count < least_freq_count) {
+            least_freq_count = page_table[i].reference_count;
             frame_to_replace = page_table[i].frame_number;
         }
     }
