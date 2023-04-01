@@ -124,6 +124,13 @@ int count_page_faults_lru(struct PTE page_table[TABLEMAX],int table_cnt,int refe
     int faults = 0;
     int timestamp = 1;
 
+    if(table_cnt == 0) {
+        int i;
+        for(i=0; i<TABLEMAX; i++) {
+            page_table[i].is_valid = 0;
+        }
+    }
+
     for (int i = 0; i < reference_cnt; i++) {
         int page_number = reference_string[i];
 
