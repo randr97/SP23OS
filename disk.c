@@ -107,8 +107,9 @@ struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], in
                 earliest_arrival_time = request_queue[i].arrival_timestamp;
                 earliest_arrival_time_index = i;
             }
-        } else if ((scan_direction == 1 && request_queue[i].cylinder > current_cylinder) ||
-                   (scan_direction == 0 && request_queue[i].cylinder < current_cylinder)) {
+        }
+        else
+        {
             int cylinder_diff = abs(request_queue[i].cylinder - current_cylinder);
             if (cylinder_diff < closest_cylinder_diff) {
                 closest_cylinder_diff = cylinder_diff;
