@@ -133,7 +133,7 @@ int count_page_faults_lru(struct PTE page_table[TABLEMAX],int table_cnt,int refe
 
     for (int i = 0; i < reference_cnt; i++) {
         int page_number = reference_string[i];
-
+        timestamp++;
         if (page_table[page_number].is_valid) {
             page_table[page_number].last_access_timestamp = timestamp;
             page_table[page_number].reference_count++;
@@ -172,8 +172,6 @@ int count_page_faults_lru(struct PTE page_table[TABLEMAX],int table_cnt,int refe
                 faults++;
             }
         }
-
-        timestamp++;
     }
 
     return faults;
