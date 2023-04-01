@@ -93,46 +93,49 @@ struct RCB handle_request_arrival_look(struct RCB request_queue[QUEUEMAX],int *q
 }
 
 struct RCB handle_request_completion_look(struct RCB request_queue[QUEUEMAX], int *queue_cnt, int current_cylinder, int scan_direction) {
+    // Initialize variables to keep track of the closest RCB in each direction
+    struct RCB closest_lower = NULL_RCB;
+    struct RCB closest_higher = NULL_RCB;
     
-    // If request queue is empty, return NULLRCB
-    if (*queue_cnt == 0) {
-        return NULL_RCB;
-    }
+    // Initialize variables to keep track of the earliest RCB with the same cylinder
+    struct RCB earliest_same_cylinder = NULL_RCB;
+    int earliest_arrival_time = INT_MAX;
     
-    // Find the next request to service
-    int next_request_idx = -1; // index of the next request to service in the queue
-    int min_distance = INT_MAX; // min distance between current cylinder and request cylinder
-    
+    // Find the closest RCB in each direction and the earliest RCB with the same cylinder
     for (int i = 0; i < *queue_cnt; i++) {
-        if (request_queue[i].cylinder == current_cylinder) {
-            if (request_queue[i].arrival_timestamp < request_queue[next_request_idx].arrival_timestamp || next_request_idx == -1) {
-                next_request_idx = i;
+        struct RCB current_rcb = request_queue[i];
+        if (current_rcb.cylinder == current_cylinder) {
+            if (current_rcb.arrival_timestamp < earliest_arrival_time) {
+                earliest_same_cylinder = current_rcb;
+                earliest_arrival_time = current_rcb.arrival_timestamp;
             }
-        } else if (scan_direction == 1 && request_queue[i].cylinder > current_cylinder) {
-            int distance = request_queue[i].cylinder - current_cylinder;
-            if (distance < min_distance) {
-                next_request_idx = i;
-                min_distance = distance;
+        } else if (current_rcb.cylinder < current_cylinder) {
+            if (closest_lower.cylinder == 0 || current_cylinder - current_rcb.cylinder < current_cylinder - closest_lower.cylinder) {
+                closest_lower = current_rcb;
             }
-        } else if (scan_direction == 1 && i == *queue_cnt - 1) {
-            next_request_idx = i;
-        } else if (scan_direction == 0 && request_queue[i].cylinder < current_cylinder) {
-            int distance = current_cylinder - request_queue[i].cylinder;
-            if (distance < min_distance) {
-                next_request_idx = i;
-                min_distance = distance;
+        } else {
+            if (closest_higher.cylinder == 0 || current_rcb.cylinder - current_cylinder < closest_higher.cylinder - current_cylinder) {
+                closest_higher = current_rcb;
             }
-        } else if (scan_direction == 0 && i == *queue_cnt - 1) {
-            next_request_idx = i;
         }
     }
     
-    // Remove the next request to service from the queue
-    struct RCB next_request = request_queue[next_request_idx];
-    for (int i = next_request_idx; i < *queue_cnt - 1; i++) {
-        request_queue[i] = request_queue[i + 1];
+    // Determine which RCB to service next based on the current direction and the RCBs found above
+    if (scan_direction == 1) {
+        if (closest_higher.cylinder != 0) {
+            return closest_higher;
+        } else if (earliest_same_cylinder.cylinder != 0) {
+            return earliest_same_cylinder;
+        } else {
+            return closest_lower;
+        }
+    } else {
+        if (closest_lower.cylinder != 0) {
+            return closest_lower;
+        } else if (earliest_same_cylinder.cylinder != 0) {
+            return earliest_same_cylinder;
+        } else {
+            return closest_higher;
+        }
     }
-    *queue_cnt -= 1;
-    
-    return next_request;
 }
